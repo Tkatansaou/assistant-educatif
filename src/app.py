@@ -16,8 +16,8 @@ load_dotenv()
 
 # Vérification des clés API
 if not os.getenv("OPENAI_API_KEY") and not os.getenv("GEMINI_API_KEY"):
-    st.error("Erreur : Aucune clé API n'est configurée dans le fichier .env")
-    st.info("Veuillez configurer au moins une clé API (OpenAI ou Gemini)")
+    st.error("Erreur : Aucune clé API n'est configurée")
+    st.info("Veuillez configurer au moins une clé API (OpenAI ou Gemini) dans les paramètres de l'application")
     st.stop()
 
 # Titre de l'application
@@ -87,30 +87,25 @@ elif matiere == "Sciences de la Vie et de la Terre":
         ["Observation", "Expérimentation", "Classification", "Analyse de documents"]
     )
 
-# Zone de texte pour la demande
-user_input = st.text_area(
-    "Votre demande",
-    placeholder=f"Exemple : Génère des exercices de {matiere} pour la {niveau} au {pays}"
-)
-
 # Bouton pour soumettre
-if st.button("Générer"):
-    if user_input:
-        with st.spinner("Génération en cours..."):
+if st.button("Générer des exercices"):
+    if not os.getenv("OPENAI_API_KEY") and not os.getenv("GEMINI_API_KEY"):
+        st.error("Erreur : Aucune clé API n'est configurée")
+        st.info("Veuillez configurer au moins une clé API dans les paramètres de l'application")
+    else:
+        with st.spinner("Génération des exercices en cours..."):
             try:
-                # Préparation de la demande complète
-                demande = f"Génère des exercices de {matiere} ({type_exercice}) pour la {niveau} au {pays}. Demande spécifique : {user_input}"
+                # Préparation de la demande
+                demande = f"Génère des exercices de {matiere} de type {type_exercice} pour la {niveau} au {pays}"
                 
                 # Exécution de l'agent
                 result = asyncio.run(process_request(demande))
                 
                 # Affichage du résultat
                 st.success("Exercices générés avec succès !")
-                st.write(result)
+                st.markdown(result)
             except Exception as e:
                 st.error(f"Une erreur s'est produite : {str(e)}")
-    else:
-        st.warning("Veuillez entrer une demande")
 
 # Pied de page
 st.markdown("---")
