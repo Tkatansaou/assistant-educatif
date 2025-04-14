@@ -1,7 +1,6 @@
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.tools.base import ToolException
 from langchain_core.tools import tool
 from langchain.agents import AgentExecutor, create_openai_functions_agent
 import asyncio
@@ -14,6 +13,17 @@ load_dotenv()
 # Vérification des clés API
 if not os.getenv("OPENAI_API_KEY") and not os.getenv("GEMINI_API_KEY"):
     raise ValueError("Aucune clé API n'est configurée dans le fichier .env")
+
+@tool
+def generer_exercices(matiere: str, niveau: str, pays: str, type_exercice: str) -> str:
+    """Génère des exercices adaptés à la matière, au niveau et au pays spécifiés."""
+    return f"""Exercices de {matiere} ({type_exercice}) pour {niveau} au {pays} :
+
+1. Premier exercice adapté au niveau et au contexte local
+2. Deuxième exercice avec progression de difficulté
+3. Troisième exercice d'application pratique
+4. Quatrième exercice de révision
+5. Cinquième exercice d'approfondissement"""
 
 @tool
 def generer_exercices_maths(niveau: str, pays: str, type_exercice: str, nombre_exercices: int = 5) -> str:
@@ -219,32 +229,22 @@ async def process_request(user_input: str) -> str:
                 temperature=0.7
             ))
         
+        if not models:
+            return "Erreur : Aucune clé API valide n'est configurée."
+        
         # Utilisation du premier modèle disponible
         llm = models[0]
         
         # Création du prompt
         prompt = ChatPromptTemplate.from_messages([
-            ("system", """Vous êtes un assistant spécialisé dans l'éducation qui peut :
-            - Générer des exercices pour différentes matières
-            - Analyser des textes
-            - Traduire des textes
-            Répondez de manière claire et pédagogique."""),
+            ("system", """Vous êtes un assistant spécialisé dans l'éducation qui génère des exercices adaptés au niveau scolaire et au contexte local.
+            Pour chaque demande, générez des exercices pertinents et progressifs."""),
             ("user", "{input}"),
             MessagesPlaceholder(variable_name="agent_scratchpad")
         ])
 
         # Création de l'agent
-        tools = [
-            generer_exercices_maths,
-            generer_exercices_ecm,
-            generer_exercices_francais,
-            generer_exercices_anglais,
-            generer_exercices_histoire_geo,
-            generer_exercices_sciences_physiques,
-            generer_exercices_svt,
-            analyser_texte,
-            traduire_texte
-        ]
+        tools = [generer_exercices]
         agent = create_openai_functions_agent(llm, tools, prompt)
         agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
