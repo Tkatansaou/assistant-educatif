@@ -50,12 +50,6 @@ matiere = st.selectbox(
     ]
 )
 
-# Zone de texte pour la demande
-user_input = st.text_area(
-    "Votre demande",
-    placeholder=f"Exemple : Génère des exercices de {matiere} pour la {niveau} au {pays}"
-)
-
 # Type d'exercice selon la matière
 if matiere == "Mathématiques":
     type_exercice = st.selectbox(
@@ -93,13 +87,22 @@ elif matiere == "Sciences de la Vie et de la Terre":
         ["Observation", "Expérimentation", "Classification", "Analyse de documents"]
     )
 
+# Zone de texte pour la demande
+user_input = st.text_area(
+    "Votre demande",
+    placeholder=f"Exemple : Génère des exercices de {matiere} pour la {niveau} au {pays}"
+)
+
 # Bouton pour soumettre
 if st.button("Générer"):
     if user_input:
         with st.spinner("Génération en cours..."):
             try:
+                # Préparation de la demande complète
+                demande = f"Génère des exercices de {matiere} ({type_exercice}) pour la {niveau} au {pays}. Demande spécifique : {user_input}"
+                
                 # Exécution de l'agent
-                result = asyncio.run(process_request(user_input))
+                result = asyncio.run(process_request(demande))
                 
                 # Affichage du résultat
                 st.success("Exercices générés avec succès !")
